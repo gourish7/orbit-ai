@@ -4,9 +4,14 @@
   "description": "Universal AI coding assistant launcher — Claude Code, OpenAI Codex, Ollama",
   "type": "module",
   "bin": {
-    "orbit": "./bin/orbit.js"
+    "orbit": "bin/orbit.js"
   },
-  "files": ["bin", "src", "README.md", "demo/demo.svg"],
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "demo/demo.svg"
+  ],
   "scripts": {
     "start": "node bin/orbit.js"
   },
@@ -18,10 +23,18 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["claude", "codex", "ollama", "ai", "coding-assistant", "cli", "orbit"],
+  "keywords": [
+    "claude",
+    "codex",
+    "ollama",
+    "ai",
+    "coding-assistant",
+    "cli",
+    "orbit"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/gourish7/orbit-ai"
+    "url": "git+https://github.com/gourish7/orbit-ai.git"
   }
 }
