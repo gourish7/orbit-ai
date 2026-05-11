@@ -20,6 +20,7 @@
 - **Multi-account Claude Code** — switch between work, personal, and client accounts without re-logging in
 - **OpenAI Codex** — launch with your API key automatically
 - **Ollama** — run local AI models with no internet required
+- **Global memory** — one `~/.orbit/memory.md` file injected into every assistant on every launch
 - **Setup wizard** — guided first-run experience, detects what's installed and offers to install what's missing
 - **Shared sessions** — project conversations are shared across all your Claude accounts
 - **Cross-platform** — works on macOS, Linux, and Windows (WSL/Git Bash)
@@ -55,14 +56,16 @@ The wizard will:
 ## Usage
 
 ```bash
-orbit                # Launch the assistant selector
-orbit --add          # Add a Claude Code account
-orbit --remove       # Remove a Claude Code account
-orbit --add-model    # Add an Ollama model to the list
-orbit --setup        # Re-run the setup wizard
-orbit --list         # List all accounts & models
-orbit --version      # Show version and detected providers
-orbit --help         # Show the welcome screen
+orbit                    # Launch the assistant selector
+orbit --add              # Add a Claude Code account
+orbit --remove           # Remove a Claude Code account
+orbit --add-model        # Add an Ollama model to the list
+orbit --memory           # Edit global memory in $EDITOR
+orbit --memory --show    # Print current memory
+orbit --setup            # Re-run the setup wizard
+orbit --list             # List all accounts & models
+orbit --version          # Show version and detected providers
+orbit --help             # Show the welcome screen
 ```
 
 ---
@@ -108,6 +111,31 @@ orbit --add-model
 
 ---
 
+## Global Memory
+
+orbit can inject a shared rules/context file into every AI assistant on every launch — so you never have to re-explain your workflow, preferences, or project context.
+
+```bash
+orbit --memory        # create or edit ~/.orbit/memory.md
+orbit --memory --show # view current memory
+```
+
+A sample is provided in [`memory.example.md`](memory.example.md). Copy it to get started:
+
+```bash
+cp $(npm root -g)/orbit-ai/memory.example.md ~/.orbit/memory.md
+orbit --memory   # then customise it
+```
+
+`~/.orbit/memory.md` is yours — it never gets committed or shared.
+
+**How it works:**
+- Claude / Ollama → written to `$CLAUDE_CONFIG_DIR/CLAUDE.md` at launch
+- Codex → written to `~/.codex/instructions.md` at launch
+- Account-specific additions → put them in `$CLAUDE_CONFIG_DIR/CLAUDE.local.md`
+
+---
+
 ## Data
 
 All configuration is stored in `~/.orbit/`:
@@ -117,6 +145,7 @@ All configuration is stored in `~/.orbit/`:
 ├── accounts.json       # Claude account registry
 ├── config.json         # Setup state and enabled providers
 ├── ollama-models.json  # Ollama model list
+├── memory.md           # Your global memory (personal, never committed)
 └── projects/           # Shared project sessions
 ```
 
