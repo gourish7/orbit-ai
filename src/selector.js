@@ -1,9 +1,12 @@
 import { existsSync } from 'fs';
+import { join } from 'path';
 import { spawn } from 'child_process';
+import os from 'os';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { detect } from './providers.js';
 import { getEnabledProviders, readAccounts, readOllamaModels, ensureSharedProjects } from './config.js';
+import { applyMemory } from './adapters.js';
 import { divider } from './ui.js';
 
 const IS_WINDOWS = process.platform === 'win32';
@@ -104,6 +107,7 @@ export async function selectAndLaunch(passthroughArgs = []) {
         }
 
         console.log(chalk.green(`  ✓ Launching Claude Code as ${chalk.bold(acc.name)}\n`));
+        applyMemory('claude', acc);
         launch(bins.claude, passthroughArgs, { CLAUDE_CONFIG_DIR: acc.config });
     }
 
@@ -113,6 +117,7 @@ export async function selectAndLaunch(passthroughArgs = []) {
             process.exit(1);
         }
         console.log(chalk.green('  ✓ Launching OpenAI Codex\n'));
+        applyMemory('codex', null);
         launch(bins.codex, passthroughArgs);
     }
 
@@ -122,6 +127,7 @@ export async function selectAndLaunch(passthroughArgs = []) {
             process.exit(1);
         }
         console.log(chalk.green(`  ✓ Launching Ollama: ${chalk.bold(selection.model)}\n`));
+        applyMemory('ollama', { config: join(os.homedir(), '.claude') });
         launch(bins.claude, ['--model', selection.model, ...passthroughArgs], {
             ANTHROPIC_AUTH_TOKEN: 'ollama',
             ANTHROPIC_BASE_URL:   'http://localhost:11434',

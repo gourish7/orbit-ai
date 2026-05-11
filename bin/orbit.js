@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { init, isSetupComplete, readOllamaModels, writeOllamaModels } from '../src/config.js';
+import { init, isSetupComplete, readOllamaModels, writeOllamaModels, readMemory, writeMemory, MEMORY_FILE } from '../src/config.js';
 import { setupWizard } from '../src/wizard.js';
 import { selectAndLaunch } from '../src/selector.js';
 import { addAccount, removeAccount, listAccounts } from '../src/accounts.js';
@@ -59,6 +59,48 @@ switch (flag) {
             readOllamaModels().forEach((m) => console.log(`    - ${m}`));
         }
         console.log();
+        break;
+    }
+
+    case '--memory': {
+        const sub = rest[0];
+
+        if (sub === '--show') {
+            const mem = readMemory();
+            if (!mem) {
+                console.log(chalk.dim('\n  No memory set yet. Run: orbit --memory\n'));
+            } else {
+                console.log();
+                console.log(chalk.cyan.bold('  ~/.orbit/memory.md'));
+                divider();
+                console.log();
+                console.log(mem);
+                console.log();
+            }
+        } else {
+            // Open in $EDITOR (fallback: nano, then vi)
+            const editor = process.env.EDITOR || process.env.VISUAL || 'nano';
+            // Seed file with template if it doesn't exist
+            if (!readMemory()) {
+                writeMemory([
+                    '# Orbit Memory',
+                    '',
+                    'Rules and context applied to all AI assistants on every launch.',
+                    '',
+                    '## Engineering Workflow',
+                    '',
+                    '- For features: present a plan first, wait for approval, then code.',
+                    '- For bugs: identify root cause, list repercussions, get approval, then fix.',
+                ].join('\n'));
+            }
+            const { spawnSync } = await import('child_process');
+            const result = spawnSync(editor, [MEMORY_FILE], { stdio: 'inherit' });
+            if (result.error) {
+                console.log(chalk.red(`\n  Could not open editor (${editor}). Edit manually: ${MEMORY_FILE}\n`));
+            } else {
+                console.log(chalk.green(`\n  ✓ Memory saved — will be applied on next launch.\n`));
+            }
+        }
         break;
     }
 

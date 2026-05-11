@@ -62,17 +62,19 @@ export function showWelcome() {
 
     const cmd = 'orbit';
     const rows = [
-        [cmd,                   'Launch the assistant selector'],
-        [`${cmd} --add`,        'Add a Claude Code account'],
-        [`${cmd} --remove`,     'Remove a Claude Code account'],
-        [`${cmd} --add-model`,  'Add an Ollama model'],
-        [`${cmd} --setup`,      'Re-run the setup wizard'],
-        [`${cmd} --list`,       'List all accounts & models'],
-        [`${cmd} --version`,    'Version & provider status'],
-        [`${cmd} --help`,       'Show this screen'],
+        [cmd,                       'Launch the assistant selector'],
+        [`${cmd} --add`,            'Add a Claude Code account'],
+        [`${cmd} --remove`,         'Remove a Claude Code account'],
+        [`${cmd} --add-model`,      'Add an Ollama model'],
+        [`${cmd} --memory`,         'Edit global memory (applied to all assistants)'],
+        [`${cmd} --memory --show`,  'Print current memory'],
+        [`${cmd} --setup`,          'Re-run the setup wizard'],
+        [`${cmd} --list`,           'List all accounts & models'],
+        [`${cmd} --version`,        'Version & provider status'],
+        [`${cmd} --help`,           'Show this screen'],
     ];
     for (const [c1, c2] of rows) {
-        console.log(`    ${chalk.cyan(c1.padEnd(22))} ${chalk.dim(c2)}`);
+        console.log(`    ${chalk.cyan(c1.padEnd(26))} ${chalk.dim(c2)}`);
     }
     console.log();
     console.log(`  ${chalk.dim('Run')} ${chalk.cyan(cmd)} ${chalk.dim('to get started.')}`);

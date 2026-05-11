@@ -2,12 +2,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, lstatSync, 
 import { join } from 'path';
 import os from 'os';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 export const DATA_DIR = join(os.homedir(), '.orbit');
 export const ACCOUNTS_FILE = join(DATA_DIR, 'accounts.json');
 export const OLLAMA_MODELS_FILE = join(DATA_DIR, 'ollama-models.json');
 export const CONFIG_FILE = join(DATA_DIR, 'config.json');
 export const SHARED_PROJECTS_DIR = join(DATA_DIR, 'projects');
+export const MEMORY_FILE = join(DATA_DIR, 'memory.md');
 
 export function init() {
     mkdirSync(DATA_DIR, { recursive: true });
@@ -38,6 +39,15 @@ export function readAccounts() {
 }
 export function writeAccounts(accounts) {
     writeFileSync(ACCOUNTS_FILE, JSON.stringify({ accounts }, null, 2));
+}
+
+export function readMemory() {
+    if (!existsSync(MEMORY_FILE)) return null;
+    const content = readFileSync(MEMORY_FILE, 'utf8').trim();
+    return content || null;
+}
+export function writeMemory(content) {
+    writeFileSync(MEMORY_FILE, content, 'utf8');
 }
 
 export function readOllamaModels() {
