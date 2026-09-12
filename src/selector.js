@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { spawn } from 'child_process';
 import os from 'os';
@@ -26,29 +26,31 @@ export async function selectAndLaunch(passthroughArgs = []) {
     const bins     = detect();
     const accounts = readAccounts();
 
+    const claudeAccounts = accounts.filter((a) => a.provider === 'claude');
+    const codexAccounts  = accounts.filter((a) => a.provider === 'codex');
+
     // Build menu choices
     const choices = [];
 
+    const accountChoice = (acc, i, type) => {
+        const project = acc.project ? chalk.dim(`  ${acc.project}`) : '';
+        return {
+            name:  `  ${acc.name} ${chalk.dim('(' + acc.email + ')')}${project}`,
+            value: { type, index: i },
+        };
+    };
+
     for (const id of enabled) {
-        if (id === 'claude' && bins.claude && accounts.length) {
+        if (id === 'claude' && bins.claude && claudeAccounts.length) {
             if (choices.length) choices.push(new inquirer.Separator());
             choices.push(new inquirer.Separator(chalk.green.bold('  Claude Code')));
-            accounts.forEach((acc, i) => {
-                const project = acc.project ? chalk.dim(`  ${acc.project}`) : '';
-                choices.push({
-                    name:  `  ${acc.name} ${chalk.dim('(' + acc.email + ')')}${project}`,
-                    value: { type: 'claude', index: i },
-                });
-            });
+            claudeAccounts.forEach((acc, i) => choices.push(accountChoice(acc, i, 'claude')));
         }
 
-        if (id === 'codex' && bins.codex) {
+        if (id === 'codex' && bins.codex && codexAccounts.length) {
             if (choices.length) choices.push(new inquirer.Separator());
             choices.push(new inquirer.Separator(chalk.cyan.bold('  OpenAI Codex')));
-            choices.push({
-                name:  `  codex ${chalk.dim('(uses $OPENAI_API_KEY)')}`,
-                value: { type: 'codex' },
-            });
+            codexAccounts.forEach((acc, i) => choices.push(accountChoice(acc, i, 'codex')));
         }
 
         if (id === 'ollama' && bins.ollama) {
@@ -87,7 +89,7 @@ export async function selectAndLaunch(passthroughArgs = []) {
     // ── Dispatch ──────────────────────────────────────────────────────────────
 
     if (selection.type === 'claude') {
-        const acc = accounts[selection.index];
+        const acc = claudeAccounts[selection.index];
         ensureSharedProjects(acc.config);
 
         if (!existsSync(`${acc.config}/.credentials.json`)) {
@@ -112,13 +114,28 @@ export async function selectAndLaunch(passthroughArgs = []) {
     }
 
     else if (selection.type === 'codex') {
-        if (!process.env.OPENAI_API_KEY) {
-            console.log(chalk.red('  OPENAI_API_KEY is not set. Add it to your shell profile.\n'));
-            process.exit(1);
+        const acc = codexAccounts[selection.index];
+        mkdirSync(acc.config, { recursive: true });
+
+        if (!existsSync(join(acc.config, 'auth.json'))) {
+            console.log(chalk.yellow(`  First time — logging in as: ${acc.name}\n`));
+            const loginResult = spawn(bins.codex, ['login'], {
+                stdio: 'inherit',
+                shell: IS_WINDOWS,
+                env:   { ...process.env, CODEX_HOME: acc.config },
+            });
+            await new Promise((resolve, reject) => {
+                loginResult.on('close', (code) => code === 0 ? resolve() : reject(new Error('Login failed')));
+            });
         }
-        console.log(chalk.green('  ✓ Launching OpenAI Codex\n'));
-        applyMemory('codex', null);
-        launch(bins.codex, passthroughArgs);
+
+        if (acc.project && existsSync(acc.project)) {
+            process.chdir(acc.project);
+        }
+
+        console.log(chalk.green(`  ✓ Launching OpenAI Codex as ${chalk.bold(acc.name)}\n`));
+        applyMemory('codex', acc);
+        launch(bins.codex, passthroughArgs, { CODEX_HOME: acc.config });
     }
 
     else if (selection.type === 'ollama') {

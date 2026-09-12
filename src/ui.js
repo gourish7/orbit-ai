@@ -43,8 +43,9 @@ export function showWelcome() {
         const installed = !!bins[id];
         const icon      = installed ? chalk.green('✓') : chalk.red('✗');
         let   extra     = '';
-        if (id === 'claude' && installed) {
-            extra = chalk.dim(` (${accounts.length} account${accounts.length !== 1 ? 's' : ''})`);
+        if ((id === 'claude' || id === 'codex') && installed) {
+            const n = accounts.filter((a) => a.provider === id).length;
+            extra = chalk.dim(` (${n} account${n !== 1 ? 's' : ''})`);
         }
         if (id === 'ollama' && installed) {
             extra = chalk.dim(` (${models.length} model${models.length !== 1 ? 's' : ''})`);
@@ -63,8 +64,8 @@ export function showWelcome() {
     const cmd = 'orbit';
     const rows = [
         [cmd,                       'Launch the assistant selector'],
-        [`${cmd} --add`,            'Add a Claude Code account'],
-        [`${cmd} --remove`,         'Remove a Claude Code account'],
+        [`${cmd} --add`,            'Add a Claude Code or OpenAI Codex account'],
+        [`${cmd} --remove`,         'Remove an account'],
         [`${cmd} --add-model`,      'Add an Ollama model'],
         [`${cmd} --memory`,         'Edit global memory (applied to all assistants)'],
         [`${cmd} --memory --show`,  'Print current memory'],

@@ -1,7 +1,7 @@
 {
   "name": "orbit-ai",
-  "version": "1.0.0",
-  "description": "Universal AI coding assistant launcher — Claude Code, OpenAI Codex, Ollama",
+  "version": "1.1.0",
+  "description": "Universal AI coding assistant launcher — multi-account Claude Code, OpenAI Codex, Ollama",
   "type": "module",
   "bin": {
     "orbit": "bin/orbit.js"

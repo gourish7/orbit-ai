@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
-import os from 'os';
 import { readMemory } from './config.js';
 
 const ORBIT_HEADER = '<!-- orbit-managed: do not edit — use `orbit --memory` instead -->\n\n';
@@ -19,7 +18,7 @@ export function applyMemory(type, acc) {
             applyClaude(acc, memory);
             break;
         case 'codex':
-            applyCodex(memory);
+            applyCodex(acc, memory);
             break;
     }
 }
@@ -41,13 +40,16 @@ function applyClaude(acc, memory) {
 }
 
 // ── Codex ─────────────────────────────────────────────────────────────────────
-// Writes to ~/.codex/instructions.md
-// Codex reads this file as global instructions when present.
+// Writes to $CODEX_HOME/AGENTS.md — the account's own Codex home.
+// Codex loads that file as global instructions on every session.
 
-function applyCodex(memory) {
-    const codexDir = join(os.homedir(), '.codex');
+function applyCodex(acc, memory) {
+    const codexDir = acc.config;
     mkdirSync(codexDir, { recursive: true });
 
-    const content = ORBIT_HEADER + memory + '\n';
-    writeFileSync(join(codexDir, 'instructions.md'), content, 'utf8');
+    const localFile = join(codexDir, 'AGENTS.local.md');
+    const local = existsSync(localFile) ? '\n\n---\n\n' + readFileSync(localFile, 'utf8').trim() : '';
+
+    const content = ORBIT_HEADER + memory + local + '\n';
+    writeFileSync(join(codexDir, 'AGENTS.md'), content, 'utf8');
 }

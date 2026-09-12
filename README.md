@@ -18,7 +18,7 @@
 ## Features
 
 - **Multi-account Claude Code** — switch between work, personal, and client accounts without re-logging in
-- **OpenAI Codex** — launch with your API key automatically
+- **Multi-account OpenAI Codex** — the same for Codex, each account with its own ChatGPT login
 - **Ollama** — run local AI models with no internet required
 - **Global memory** — one `~/.orbit/memory.md` file injected into every assistant on every launch
 - **Setup wizard** — guided first-run experience, detects what's installed and offers to install what's missing
@@ -48,7 +48,7 @@ orbit
 The wizard will:
 1. Ask which AI tools you use
 2. Check if they're installed (and offer to install them)
-3. Add your first Claude account
+3. Add your first account for each one
 4. Show you the welcome screen
 
 ---
@@ -57,8 +57,8 @@ The wizard will:
 
 ```bash
 orbit                    # Launch the assistant selector
-orbit --add              # Add a Claude Code account
-orbit --remove           # Remove a Claude Code account
+orbit --add              # Add a Claude Code or OpenAI Codex account
+orbit --remove           # Remove an account
 orbit --add-model        # Add an Ollama model to the list
 orbit --memory           # Edit global memory in $EDITOR
 orbit --memory --show    # Print current memory
@@ -75,28 +75,34 @@ orbit --help             # Show the welcome screen
 | Provider | Description | Install |
 |---|---|---|
 | [Claude Code](https://claude.ai/code) | Anthropic's AI pair programmer | `npm install -g @anthropic-ai/claude-code` |
-| [OpenAI Codex](https://github.com/openai/codex) | GPT-4o powered coding assistant | `npm install -g @openai/codex` |
+| [OpenAI Codex](https://github.com/openai/codex) | OpenAI's terminal coding agent | `npm install -g @openai/codex` |
 | [Ollama](https://ollama.com) | Local AI models, no internet required | [ollama.com](https://ollama.com) |
 
 You don't need all three — orbit works with whichever ones you have installed.
 
 ---
 
-## Multiple Claude Accounts
+## Multiple Accounts
 
-If you work across multiple clients or projects, orbit lets you maintain separate Claude accounts with isolated configurations and shared project sessions:
+If you work across multiple clients or projects, orbit lets you maintain separate accounts — for both Claude Code and OpenAI Codex — with isolated configurations:
 
 ```bash
 orbit --add
+# Which assistant is this account for? Claude Code
 # Account name: work
 # Email: you@work.com
 
 orbit --add
+# Which assistant is this account for? OpenAI Codex
 # Account name: personal
 # Email: you@gmail.com
 ```
 
-Each account has its own credentials. Project conversations are shared across accounts so you never lose context when switching.
+Each account has its own credentials, and orbit runs `claude login` / `codex login` for it the first time you select it. Claude project conversations are shared across Claude accounts so you never lose context when switching.
+
+Isolation is per provider:
+- Claude accounts get their own `CLAUDE_CONFIG_DIR`
+- Codex accounts get their own `CODEX_HOME`
 
 ---
 
@@ -131,8 +137,8 @@ orbit --memory   # then customise it
 
 **How it works:**
 - Claude / Ollama → written to `$CLAUDE_CONFIG_DIR/CLAUDE.md` at launch
-- Codex → written to `~/.codex/instructions.md` at launch
-- Account-specific additions → put them in `$CLAUDE_CONFIG_DIR/CLAUDE.local.md`
+- Codex → written to `$CODEX_HOME/AGENTS.md` at launch
+- Account-specific additions → put them in `CLAUDE.local.md` / `AGENTS.local.md` in the same directory
 
 ---
 
@@ -142,10 +148,12 @@ All configuration is stored in `~/.orbit/`:
 
 ```
 ~/.orbit/
-├── accounts.json       # Claude account registry
+├── accounts.json       # Account registry (Claude + Codex)
 ├── config.json         # Setup state and enabled providers
 ├── ollama-models.json  # Ollama model list
 ├── memory.md           # Your global memory (personal, never committed)
+├── accounts/           # Per-account Claude config dirs
+├── codex-accounts/     # Per-account Codex home dirs
 └── projects/           # Shared project sessions
 ```
 

@@ -48,10 +48,11 @@ switch (flag) {
         const bins = detect();
         console.log();
         console.log(chalk.green.bold('  Claude Accounts:'));
-        listAccounts();
+        listAccounts('claude');
         if (bins.codex) {
             console.log();
-            console.log(chalk.cyan.bold('  OpenAI Codex:') + chalk.green(' installed ✓'));
+            console.log(chalk.cyan.bold('  Codex Accounts:'));
+            listAccounts('codex');
         }
         if (bins.ollama) {
             console.log();
