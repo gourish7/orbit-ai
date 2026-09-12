@@ -1,10 +1,12 @@
-import { join } from 'path';
+import { mkdirSync } from 'fs';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import { readAccounts, writeAccounts, DATA_DIR, ensureSharedProjects } from './config.js';
+import { readAccounts, writeAccounts, accountDir, ensureSharedProjects, enableProvider } from './config.js';
 
-export function listAccounts() {
-    const accounts = readAccounts();
+const PROVIDER_LABELS = { claude: 'Claude Code', codex: 'OpenAI Codex' };
+
+export function listAccounts(provider) {
+    const accounts = readAccounts().filter((a) => a.provider === provider);
     if (!accounts.length) {
         console.log(chalk.dim('  No accounts configured.'));
         return;
@@ -15,8 +17,18 @@ export function listAccounts() {
     });
 }
 
-export async function addAccount() {
+export async function addAccount(provider) {
     const answers = await inquirer.prompt([
+        {
+            type:    'list',
+            name:    'provider',
+            message: 'Which assistant is this account for?',
+            when:    () => !provider,
+            choices: [
+                { name: 'Claude Code',   value: 'claude' },
+                { name: 'OpenAI Codex',  value: 'codex'  },
+            ],
+        },
         {
             type:     'input',
             name:     'name',
@@ -36,24 +48,33 @@ export async function addAccount() {
         },
     ]);
 
+    const type = provider || answers.provider;
+    const name = answers.name.trim();
+
     const accounts = readAccounts();
-    if (accounts.find((a) => a.name === answers.name.trim())) {
-        console.log(chalk.yellow(`  Account '${answers.name.trim()}' already exists.`));
+    if (accounts.find((a) => a.provider === type && a.name === name)) {
+        console.log(chalk.yellow(`  Account '${name}' already exists.`));
         return;
     }
 
-    const configDir = join(DATA_DIR, 'accounts', answers.name.trim());
-    ensureSharedProjects(configDir);
+    const configDir = accountDir(type, name);
+    if (type === 'claude') {
+        ensureSharedProjects(configDir);
+    } else {
+        mkdirSync(configDir, { recursive: true });
+    }
 
     accounts.push({
-        name:    answers.name.trim(),
-        email:   answers.email.trim(),
-        config:  configDir,
-        project: answers.project.trim(),
+        provider: type,
+        name,
+        email:    answers.email.trim(),
+        config:   configDir,
+        project:  answers.project.trim(),
     });
     writeAccounts(accounts);
+    enableProvider(type);
 
-    console.log(chalk.green(`\n  ✓ Account added: ${answers.name.trim()}`));
+    console.log(chalk.green(`\n  ✓ Account added: ${name}`));
     console.log(chalk.dim(`  Run orbit and select it to log in.\n`));
 }
 
@@ -69,7 +90,7 @@ export async function removeAccount() {
         name:    'choice',
         message: 'Select account to remove:',
         choices: [
-            ...accounts.map((a, i) => ({ name: `${a.name} (${a.email})`, value: i })),
+            ...accounts.map((a, i) => ({ name: `${PROVIDER_LABELS[a.provider]} — ${a.name} (${a.email})`, value: i })),
             { name: chalk.dim('Cancel'), value: -1 },
         ],
     }]);

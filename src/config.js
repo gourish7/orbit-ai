@@ -10,6 +10,15 @@ export const CONFIG_FILE = join(DATA_DIR, 'config.json');
 export const SHARED_PROJECTS_DIR = join(DATA_DIR, 'projects');
 export const MEMORY_FILE = join(DATA_DIR, 'memory.md');
 
+const ACCOUNT_DIRS = {
+    claude: join(DATA_DIR, 'accounts'),
+    codex:  join(DATA_DIR, 'codex-accounts'),
+};
+
+export function accountDir(provider, name) {
+    return join(ACCOUNT_DIRS[provider], name);
+}
+
 export function init() {
     mkdirSync(DATA_DIR, { recursive: true });
 
@@ -22,6 +31,17 @@ export function init() {
     if (!existsSync(OLLAMA_MODELS_FILE)) {
         writeFileSync(OLLAMA_MODELS_FILE, JSON.stringify({ models: ['qwen2.5-coder:7b'] }, null, 2));
     }
+    stampAccountProviders();
+}
+
+// Accounts predating multi-provider support carry no `provider` key. Stamp them
+// once as claude so provider is always read from the record, never inferred.
+function stampAccountProviders() {
+    const accounts = readAccounts();
+    const pending = accounts.filter((a) => !a.provider);
+    if (!pending.length) return;
+    pending.forEach((a) => { a.provider = 'claude'; });
+    writeAccounts(accounts);
 }
 
 function isSymlink(p) {
@@ -32,6 +52,16 @@ export function readConfig()          { return existsSync(CONFIG_FILE) ? JSON.pa
 export function writeConfig(cfg)      { writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2)); }
 export function isSetupComplete()     { return readConfig().setup_complete === true; }
 export function getEnabledProviders() { return readConfig().enabled_providers || []; }
+
+// An account is useless if its provider isn't in the launch menu, so adding one
+// enables that provider rather than sending the user back through --setup.
+export function enableProvider(id) {
+    const cfg = readConfig();
+    const enabled = cfg.enabled_providers || [];
+    if (enabled.includes(id)) return;
+    enabled.push(id);
+    writeConfig({ ...cfg, enabled_providers: enabled });
+}
 
 export function readAccounts() {
     if (!existsSync(ACCOUNTS_FILE)) return [];

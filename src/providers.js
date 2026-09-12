@@ -34,7 +34,7 @@ export const PROVIDERS = {
     codex: {
         id:      'codex',
         label:   'OpenAI Codex',
-        tagline: 'GPT-4o powered coding assistant',
+        tagline: 'OpenAI — multi-account terminal coding agent',
         cmd:     'codex',
         installCmd() {
             return 'npm install -g @openai/codex';

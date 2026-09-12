@@ -93,27 +93,16 @@ export async function setupWizard() {
     for (const id of selected) {
         if (!freshBins[id]) continue;
 
-        if (id === 'claude') {
+        if (id === 'claude' || id === 'codex') {
+            const label = PROVIDERS[id].label;
             const { doAdd } = await inquirer.prompt([{
                 type:    'confirm',
                 name:    'doAdd',
-                message: 'Add your first Claude Code account now?',
+                message: `Add your first ${label} account now?`,
                 prefix:  '  ',
                 default: true,
             }]);
-            if (doAdd) await addAccount();
-        }
-
-        if (id === 'codex') {
-            if (!process.env.OPENAI_API_KEY) {
-                console.log(chalk.yellow('  OpenAI Codex — OPENAI_API_KEY not found in environment.'));
-                console.log(chalk.dim('  Add this to your shell profile (~/.bashrc, ~/.zshrc):'));
-                console.log(chalk.dim('  export OPENAI_API_KEY=your_key_here'));
-                console.log();
-            } else {
-                console.log(chalk.green('  ✓ OpenAI Codex — OPENAI_API_KEY is set'));
-                console.log();
-            }
+            if (doAdd) await addAccount(id);
         }
 
         if (id === 'ollama') {
